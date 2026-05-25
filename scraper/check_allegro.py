@@ -48,11 +48,11 @@ def should_run_now(config):
 
 
 def normalize_text(text):
-    return re.sub(r"\s+", " ", text.lower()).strip()
+    return re.sub(r"\s+", " ", str(text).lower()).strip()
 
 
 def extract_price_huf(text):
-    cleaned = text.replace("\xa0", " ")
+    cleaned = str(text).replace("\xa0", " ")
 
     patterns = [
         r"(\d[\d\s]*)\s*Ft",
@@ -71,8 +71,8 @@ def extract_price_huf(text):
     return None
 
 
-def extract_pack_count(title):
-    text = normalize_text(title)
+def extract_pack_count(text):
+    text = normalize_text(text)
 
     patterns = [
         r"(\d+)\s*x\s*\d+",
@@ -95,8 +95,8 @@ def extract_pack_count(title):
     return 1
 
 
-def matches_product(title, product):
-    text = normalize_text(title)
+def matches_product(text, product):
+    text = normalize_text(text)
 
     must_include = product.get("must_include", [])
     exclude = product.get("exclude", [])
@@ -113,29 +113,37 @@ def matches_product(title, product):
 
 
 def clean_title(raw_text):
-    lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+    lines = [line.strip() for line in str(raw_text).splitlines() if line.strip()]
 
     if not lines:
-        return raw_text.strip()
+        return str(raw_text).strip()[:220]
 
     bad_words = [
         "hozzáadás",
         "összehasonlításhoz",
         "szállítás",
         "tanúsítvány",
-        "szuper eladó"
+        "szuper eladó",
+        "információk",
+        "már ennyiért",
+        "kosárba",
+        "értékelés"
     ]
 
     candidates = []
 
     for line in lines:
         lower = line.lower()
+
         if any(bad in lower for bad in bad_words):
             continue
-        if "ft" in lower:
+
+        if "ft" in lower or "huf" in lower:
             continue
+
         if len(line) < 5:
             continue
+
         candidates.append(line)
 
     if candidates:
@@ -146,20 +154,22 @@ def clean_title(raw_text):
 
 def scrape_query(page, query, product):
     encoded = quote_plus(query)
-    url = f"https://allegro.hu/listing?string={encoded}"
+    url = f"https://allegro.hu/kereses?string={encoded}"
 
-    page.goto(url, wait_until="domcontentloaded", timeout=60000)
-    time.sleep(3)
+    page.goto(url, wait_until="commit", timeout=20000)
+    time.sleep(2)
 
     offers = []
     articles = page.locator("article").all()
 
-    for article in articles[:50]:
+    print(f"Found article cards: {len(articles)}")
+
+    for article in articles[:25]:
         try:
             raw_text = article.inner_text(timeout=3000)
             title = clean_title(raw_text)
 
-            if not matches_product(title, product):
+            if not matches_product(raw_text, product):
                 continue
 
             price = extract_price_huf(raw_text)
@@ -181,7 +191,7 @@ def scrape_query(page, query, product):
             if link.startswith("/"):
                 link = "https://allegro.hu" + link
 
-            pack_count = extract_pack_count(title)
+            pack_count = extract_pack_count(raw_text)
             unit_price = round(price / pack_count)
 
             offers.append({
@@ -193,9 +203,11 @@ def scrape_query(page, query, product):
                 "url": link.split("?")[0]
             })
 
-        except Exception:
+        except Exception as error:
+            print(f"Card parse failed: {error}")
             continue
 
+    print(f"Matched offers: {len(offers)}")
     return offers
 
 
@@ -256,13 +268,15 @@ def main():
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
+
         page = browser.new_page(
             user_agent=(
                 "Mozilla/5.0 "
                 "AppleWebKit/537.36 "
                 "Chrome/120.0 Safari/537.36 "
                 "RamenDealsBot/1.0"
-            )
+            ),
+            viewport={"width": 1366, "height": 768}
         )
 
         for product in config.get("products", []):
@@ -316,6 +330,7 @@ def main():
 
     save_json(SEEN_PATH, sorted(new_seen_hotdeals))
 
+    print(f"Total scraped offers: {len(all_offers)}")
     print(f"Done. Visible offers: {len(visible_offers)}")
 
 
