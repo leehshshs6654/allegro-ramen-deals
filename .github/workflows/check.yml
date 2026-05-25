@@ -32,6 +32,13 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scraper/check_allegro.py --force
 
+      - name: Upload debug files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allegro-debug
+          path: debug/
+
       - name: Commit updated files
         run: |
           git config user.name "ramen-bot"
