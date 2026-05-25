@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hungary Ramyun Deals</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .summary {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #222;
+      color: white;
+    }
+
+    a {
+      color: #0066cc;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .hot {
+      color: #d60000;
+      font-weight: bold;
+    }
+
+    .normal {
+      color: #333;
+    }
+
+    .muted {
+      color: #777;
+      font-size: 0.9em;
+    }
+
+    .empty {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      text-align: center;
+      color: #777;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: 12px;
+      }
+
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        margin-bottom: 14px;
+        background: white;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+
+      td {
+        border-bottom: none;
+        padding: 6px 0;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🍜 Hungary Ramyun Deals</h1>
+    <div class="subtitle">
+      Allegro Hungary 라면 가격 체크 · 개당 500 Ft 미만 표시 · 개당 300 Ft 미만 HOT
+    </div>
+
+    <div class="summary">
+      <div id="updated">불러오는 중...</div>
+      <div class="muted">상품명을 클릭하면 Allegro 판매 페이지로 이동합니다.</div>
+    </div>
+
+    <div id="content"></div>
+  </div>
+
+  <script>
+    async function loadOffers() {
+      const content = document.getElementById("content");
+      const updated = document.getElementById("updated");
+
+      try {
+        const response = await fetch("./offers.json?ts=" + Date.now());
+        const offers = await response.json();
+
+        if (!offers || offers.length === 0) {
+          updated.textContent = "현재 표시할 500 Ft 미만 상품이 없습니다.";
+          content.innerHTML = '<div class="empty">아직 표시할 상품이 없습니다.</div>';
+          return;
+        }
+
+        offers.sort((a, b) => a.unit_price - b.unit_price);
+
+        const latest = offers[0].checked_at || "확인 시간 없음";
+        updated.textContent = "마지막 업데이트: " + latest + " · 표시 상품 수: " + offers.length;
+
+        const rows = offers.map(offer => {
+          const status = offer.unit_price < 300 ? "🔥 HOT" : "👀 GOOD";
+          const statusClass = offer.unit_price < 300 ? "hot" : "normal";
+
+          return `
+            <tr>
+              <td data-label="상태" class="${statusClass}">${status}</td>
+              <td data-label="분류">${escapeHtml(offer.product || "")}</td>
+              <td data-label="상품명">
+                <a href="${offer.url}" target="_blank" rel="noopener noreferrer">
+                  ${escapeHtml(offer.title || "")}
+                </a>
+              </td>
+              <td data-label="총 가격">${offer.price} Ft</td>
+              <td data-label="수량">${offer.pack_count}개</td>
+              <td data-label="개당가"><strong>${offer.unit_price} Ft</strong></td>
+            </tr>
+          `;
+        }).join("");
+
+        content.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>상태</th>
+                <th>분류</th>
+                <th>상품명</th>
+                <th>총 가격</th>
+                <th>수량</th>
+                <th>개당가</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        `;
+      } catch (error) {
+        updated.textContent = "offers.json을 불러오지 못했습니다.";
+        content.innerHTML = '<div class="empty">데이터 로딩 실패</div>';
+      }
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    loadOffers();
+  </script>
+</body>
+</html>
