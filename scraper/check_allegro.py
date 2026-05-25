@@ -79,13 +79,31 @@ def extract_pack_count(text):
     patterns = [
         r"(\d+)\s*x\s*\d+",
         r"(\d+)\s*×\s*\d+",
-        r"(\d+)\s*db",
-        r"(\d+)\s*darab",
+        r"(\d+)\s*-\s*pack",
+        r"(\d+)\s*pack",
         r"(\d+)\s*pcs",
         r"(\d+)\s*pieces",
-        r"(\d+)\s*pack",
-        r"(\d+)\s*csomag"
+        r"(\d+)\s*db",
+        r"(\d+)\s*darab",
+        r"(\d+)\s*csomag",
+        r"(\d+)\s*tasak",
+        r"(\d+)\s*zacskó",
+        r"(\d+)\s*bags",
+        r"(\d+)\s*bag",
+        r"carton\s*(\d+)",
+        r"box\s*of\s*(\d+)",
+        r"karton\s*(\d+)",
+        r"teljes\s*karton\s*(\d+)"
     ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            count = int(match.group(1))
+            if 1 <= count <= 100:
+                return count
+
+    return 1
 
     for pattern in patterns:
         match = re.search(pattern, text)
