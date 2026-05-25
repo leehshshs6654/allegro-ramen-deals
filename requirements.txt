@@ -1,3 +1,4 @@
 requests
-openai
 tzdata
+playwright
+playwright-stealth
