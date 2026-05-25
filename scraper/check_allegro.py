@@ -52,23 +52,25 @@ def normalize_text(text):
 
 
 def extract_price_huf(text):
-    cleaned = str(text).replace("\xa0", " ")
+    text = str(text).replace("\xa0", " ")
 
-    patterns = [
-        r"(\d[\d\s]*)\s*Ft",
-        r"(\d[\d\s]*)\s*HUF"
-    ]
+    matches = re.findall(r"(\d[\d\s]{1,10})\s*(?:Ft|HUF)", text, re.IGNORECASE)
 
-    for pattern in patterns:
-        match = re.search(pattern, cleaned, re.IGNORECASE)
-        if match:
-            number = match.group(1).replace(" ", "")
-            try:
-                return int(number)
-            except ValueError:
-                return None
+    prices = []
 
-    return None
+    for match in matches:
+        number = match.replace(" ", "")
+        try:
+            value = int(number)
+            if 100 <= value <= 200000:
+                prices.append(value)
+        except ValueError:
+            continue
+
+    if not prices:
+        return None
+
+    return min(prices)
 
 
 def extract_pack_count(text):
@@ -98,25 +100,19 @@ def extract_pack_count(text):
 def matches_product(text, product):
     text = normalize_text(text)
 
-    must_include = product.get("must_include", [])
-    exclude = product.get("exclude", [])
-
-    for word in must_include:
+    for word in product.get("must_include", []):
         if normalize_text(word) not in text:
             return False
 
-    for word in exclude:
+    for word in product.get("exclude", []):
         if normalize_text(word) in text:
             return False
 
     return True
 
 
-def clean_title(raw_text):
-    lines = [line.strip() for line in str(raw_text).splitlines() if line.strip()]
-
-    if not lines:
-        return str(raw_text).strip()[:220]
+def clean_title(text):
+    lines = [line.strip() for line in str(text).splitlines() if line.strip()]
 
     bad_words = [
         "hozzáadás",
@@ -127,7 +123,10 @@ def clean_title(raw_text):
         "információk",
         "már ennyiért",
         "kosárba",
-        "értékelés"
+        "értékelés",
+        "delivery",
+        "compare",
+        "add to"
     ]
 
     candidates = []
@@ -149,50 +148,133 @@ def clean_title(raw_text):
     if candidates:
         return candidates[0][:220]
 
-    return lines[0][:220]
+    if lines:
+        return lines[0][:220]
+
+    return "Unknown product"
+
+
+def make_full_url(href):
+    if href.startswith("http"):
+        return href.split("?")[0]
+
+    if href.startswith("/"):
+        return "https://allegro.hu" + href.split("?")[0]
+
+    return href.split("?")[0]
+
+
+def get_offer_text_from_anchor(anchor):
+    js = """
+    element => {
+        let node = element;
+        let best = element.innerText || element.textContent || "";
+
+        for (let i = 0; i < 8; i++) {
+            if (!node.parentElement) break;
+            node = node.parentElement;
+            const txt = node.innerText || node.textContent || "";
+            if (txt.includes("Ft") || txt.includes("HUF")) {
+                return txt;
+            }
+            if (txt.length > best.length && txt.length < 2000) {
+                best = txt;
+            }
+        }
+
+        return best;
+    }
+    """
+
+    try:
+        return anchor.evaluate(js)
+    except Exception:
+        try:
+            return anchor.inner_text(timeout=2000)
+        except Exception:
+            return ""
+
+
+def try_load_search_page(page, query):
+    encoded = quote_plus(query)
+
+    urls = [
+        f"https://allegro.hu/kereses?string={encoded}",
+        f"https://allegro.hu/listing?string={encoded}"
+    ]
+
+    for url in urls:
+        try:
+            page.goto(url, wait_until="domcontentloaded", timeout=45000)
+            time.sleep(3)
+            return url
+        except Exception as error:
+            print(f"Page load failed: {url} / {error}")
+
+    return None
 
 
 def scrape_query(page, query, product):
-    encoded = quote_plus(query)
-    url = f"https://allegro.hu/kereses?string={encoded}"
+    loaded_url = try_load_search_page(page, query)
 
-    page.goto(url, wait_until="commit", timeout=20000)
-    time.sleep(2)
+    if not loaded_url:
+        print(f"Search failed completely: {query}")
+        return []
+
+    print(f"Loaded URL: {loaded_url}")
+
+    try:
+        title = page.title()
+        print(f"Page title: {title}")
+    except Exception:
+        pass
 
     offers = []
-    articles = page.locator("article").all()
 
-    print(f"Found article cards: {len(articles)}")
+    anchors = page.locator('a[href*="/termek/"]').all()
+    print(f"Found product links: {len(anchors)}")
 
-    for article in articles[:25]:
+    if len(anchors) == 0:
         try:
-            raw_text = article.inner_text(timeout=3000)
-            title = clean_title(raw_text)
+            body_text = page.locator("body").inner_text(timeout=3000)
+            print("Body text sample:")
+            print(body_text[:800])
+        except Exception as error:
+            print(f"Could not read body text: {error}")
+        return []
+
+    seen_urls = set()
+
+    for anchor in anchors[:80]:
+        try:
+            href = anchor.get_attribute("href")
+
+            if not href or "/termek/" not in href:
+                continue
+
+            url = make_full_url(href)
+
+            if url in seen_urls:
+                continue
+
+            seen_urls.add(url)
+
+            raw_text = get_offer_text_from_anchor(anchor)
+
+            if not raw_text:
+                continue
 
             if not matches_product(raw_text, product):
                 continue
 
             price = extract_price_huf(raw_text)
+
             if price is None:
                 continue
 
-            link = None
-            anchors = article.locator("a").all()
-
-            for anchor in anchors:
-                href = anchor.get_attribute("href")
-                if href and "/termek/" in href:
-                    link = href
-                    break
-
-            if not link:
-                continue
-
-            if link.startswith("/"):
-                link = "https://allegro.hu" + link
-
             pack_count = extract_pack_count(raw_text)
             unit_price = round(price / pack_count)
+            title = clean_title(raw_text)
 
             offers.append({
                 "product": product["name"],
@@ -200,11 +282,11 @@ def scrape_query(page, query, product):
                 "price": price,
                 "pack_count": pack_count,
                 "unit_price": unit_price,
-                "url": link.split("?")[0]
+                "url": url
             })
 
         except Exception as error:
-            print(f"Card parse failed: {error}")
+            print(f"Product link parse failed: {error}")
             continue
 
     print(f"Matched offers: {len(offers)}")
@@ -267,17 +349,25 @@ def main():
     all_offers = []
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-
-        page = browser.new_page(
-            user_agent=(
-                "Mozilla/5.0 "
-                "AppleWebKit/537.36 "
-                "Chrome/120.0 Safari/537.36 "
-                "RamenDealsBot/1.0"
-            ),
-            viewport={"width": 1366, "height": 768}
+        browser = p.chromium.launch(
+            headless=True,
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox"
+            ]
         )
+
+        context = browser.new_context(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+            viewport={"width": 1366, "height": 768},
+            locale="hu-HU"
+        )
+
+        page = context.new_page()
 
         for product in config.get("products", []):
             for query in product.get("queries", []):
