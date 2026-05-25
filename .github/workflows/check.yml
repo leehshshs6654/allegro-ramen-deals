@@ -1,0 +1,41 @@
+name: Check Allegro Ramen Deals
+
+on:
+  schedule:
+    - cron: "30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+
+      - name: Run ramen checker
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scraper/check_allegro.py
+
+      - name: Commit updated files
+        run: |
+          git config user.name "ramen-bot"
+          git config user.email "ramen-bot@users.noreply.github.com"
+          git add public/offers.json seen_hotdeals.json
+          git commit -m "Update ramen deals" || echo "No changes to commit"
+          git push
