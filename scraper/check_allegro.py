@@ -252,14 +252,31 @@ def scrape_query(page, query, product):
     anchors = page.locator('a[href*="/termek/"]').all()
     print(f"Found product links: {len(anchors)}")
 
-    if len(anchors) == 0:
-        try:
-            body_text = page.locator("body").inner_text(timeout=3000)
-            print("Body text sample:")
-            print(body_text[:800])
-        except Exception as error:
-            print(f"Could not read body text: {error}")
-        return []
+if len(anchors) == 0:
+    try:
+        debug_dir = BASE_DIR / "debug"
+        debug_dir.mkdir(exist_ok=True)
+
+        safe_query = re.sub(r"[^a-zA-Z0-9_-]+", "_", query)
+        html_path = debug_dir / f"{safe_query}.html"
+        png_path = debug_dir / f"{safe_query}.png"
+
+        html = page.content()
+        html_path.write_text(html, encoding="utf-8")
+
+        page.screenshot(path=str(png_path), full_page=True)
+
+        body_text = page.locator("body").inner_text(timeout=3000)
+
+        print("Body text sample:")
+        print(body_text[:1200])
+        print(f"Saved debug HTML: {html_path}")
+        print(f"Saved debug screenshot: {png_path}")
+
+    except Exception as error:
+        print(f"Could not save debug files: {error}")
+
+    return []
 
     seen_urls = set()
 
