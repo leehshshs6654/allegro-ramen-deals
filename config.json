@@ -1,0 +1,68 @@
+{
+  "display_max_price": 500,
+  "alert_max_price": 300,
+  "timezone": "Europe/Budapest",
+  "run_hours": [3, 9, 15, 21],
+  "products": [
+    {
+      "name": "Shin Ramyun",
+      "queries": ["shin ramyun", "nongshim shin ramyun"],
+      "must_include": ["shin", "ramyun"],
+      "exclude": ["cup", "bowl", "black", "kimchi", "toomba", "stir fry"]
+    },
+    {
+      "name": "Shin Ramyun Kimchi",
+      "queries": ["shin ramyun kimchi", "nongshim shin kimchi"],
+      "must_include": ["shin", "kimchi"],
+      "exclude": ["cup", "bowl"]
+    },
+    {
+      "name": "Buldak Original",
+      "queries": ["samyang buldak hot chicken", "buldak original"],
+      "must_include": ["buldak"],
+      "exclude": ["cup", "bowl", "carbonara", "cheese", "quattro", "sauce"]
+    },
+    {
+      "name": "Buldak Carbonara",
+      "queries": ["samyang buldak carbonara"],
+      "must_include": ["buldak", "carbonara"],
+      "exclude": ["cup", "bowl", "sauce"]
+    },
+    {
+      "name": "Buldak Cheese",
+      "queries": ["samyang buldak cheese"],
+      "must_include": ["buldak", "cheese"],
+      "exclude": ["cup", "bowl", "sauce"]
+    },
+    {
+      "name": "Jin Ramen",
+      "queries": ["ottogi jin ramen", "jin ramen ottogi"],
+      "must_include": ["jin", "ramen"],
+      "exclude": ["cup", "bowl"]
+    },
+    {
+      "name": "Neoguri",
+      "queries": ["nongshim neoguri", "neoguri ramen"],
+      "must_include": ["neoguri"],
+      "exclude": ["cup", "bowl"]
+    },
+    {
+      "name": "Chapaghetti",
+      "queries": ["nongshim chapaghetti", "chapaghetti"],
+      "must_include": ["chapaghetti"],
+      "exclude": ["cup", "bowl"]
+    },
+    {
+      "name": "Indomie Mi Goreng",
+      "queries": ["indomie mi goreng"],
+      "must_include": ["indomie", "goreng"],
+      "exclude": ["cup", "bowl"]
+    },
+    {
+      "name": "Nissin Demae Ramen",
+      "queries": ["nissin demae ramen"],
+      "must_include": ["nissin", "demae"],
+      "exclude": ["cup", "bowl"]
+    }
+  ]
+}
