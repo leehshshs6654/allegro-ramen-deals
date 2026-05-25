@@ -105,15 +105,6 @@ def extract_pack_count(text):
 
     return 1
 
-    for pattern in patterns:
-        match = re.search(pattern, text)
-        if match:
-            count = int(match.group(1))
-            if 1 <= count <= 100:
-                return count
-
-    return 1
-
 
 def matches_product(text, product):
     text = normalize_text(text)
@@ -173,6 +164,8 @@ def clean_title(text):
 
 
 def make_full_url(href):
+    href = str(href)
+
     if href.startswith("http"):
         return href.split("?")[0]
 
@@ -190,11 +183,14 @@ def get_offer_text_from_anchor(anchor):
 
         for (let i = 0; i < 8; i++) {
             if (!node.parentElement) break;
+
             node = node.parentElement;
             const txt = node.innerText || node.textContent || "";
+
             if (txt.includes("Ft") || txt.includes("HUF")) {
                 return txt;
             }
+
             if (txt.length > best.length && txt.length < 2000) {
                 best = txt;
             }
@@ -218,7 +214,8 @@ def try_load_search_page(page, query):
 
     urls = [
         f"https://allegro.hu/kereses?string={encoded}",
-        f"https://allegro.hu/listing?string={encoded}"
+        f"https://allegro.hu/listing?string={encoded}",
+        f"https://allegro.hu/kategoria/keszetelek-levesek-112612?string={encoded}"
     ]
 
     for url in urls:
@@ -230,6 +227,30 @@ def try_load_search_page(page, query):
             print(f"Page load failed: {url} / {error}")
 
     return None
+
+
+def save_debug_files(page, query):
+    debug_dir = BASE_DIR / "debug"
+    debug_dir.mkdir(exist_ok=True)
+
+    safe_query = re.sub(r"[^a-zA-Z0-9_-]+", "_", query)
+    html_path = debug_dir / f"{safe_query}.html"
+    png_path = debug_dir / f"{safe_query}.png"
+
+    html = page.content()
+    html_path.write_text(html, encoding="utf-8")
+
+    page.screenshot(path=str(png_path), full_page=True)
+
+    try:
+        body_text = page.locator("body").inner_text(timeout=3000)
+    except Exception:
+        body_text = ""
+
+    print("Body text sample:")
+    print(body_text[:1200])
+    print(f"Saved debug HTML: {html_path}")
+    print(f"Saved debug screenshot: {png_path}")
 
 
 def scrape_query(page, query, product):
@@ -252,31 +273,13 @@ def scrape_query(page, query, product):
     anchors = page.locator('a[href*="/termek/"]').all()
     print(f"Found product links: {len(anchors)}")
 
-if len(anchors) == 0:
-    try:
-        debug_dir = BASE_DIR / "debug"
-        debug_dir.mkdir(exist_ok=True)
+    if len(anchors) == 0:
+        try:
+            save_debug_files(page, query)
+        except Exception as error:
+            print(f"Could not save debug files: {error}")
 
-        safe_query = re.sub(r"[^a-zA-Z0-9_-]+", "_", query)
-        html_path = debug_dir / f"{safe_query}.html"
-        png_path = debug_dir / f"{safe_query}.png"
-
-        html = page.content()
-        html_path.write_text(html, encoding="utf-8")
-
-        page.screenshot(path=str(png_path), full_page=True)
-
-        body_text = page.locator("body").inner_text(timeout=3000)
-
-        print("Body text sample:")
-        print(body_text[:1200])
-        print(f"Saved debug HTML: {html_path}")
-        print(f"Saved debug screenshot: {png_path}")
-
-    except Exception as error:
-        print(f"Could not save debug files: {error}")
-
-    return []
+        return []
 
     seen_urls = set()
 
