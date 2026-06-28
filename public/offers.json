@@ -1,1 +1,62 @@
-[]
+[
+  {
+    "product": "Shin Ramyun",
+    "title": "Instant tészta szett NongShim Shin Ramyun fűszeres csirke 5 x 120 g",
+    "price": 461,
+    "pack_count": 5,
+    "unit_price": 92,
+    "url": "https://allegro.hu/termek/shin-ramyun-instant-teszta-szett-fuszeres-csirke-nongshim-600-g-266c3375-775c-4776-838c-01429d24090e",
+    "checked_at": "2026-06-28 21:51 Europe/Budapest",
+    "status": "hot"
+  },
+  {
+    "product": "Shin Ramyun",
+    "title": "Nongshim Shin Ramyun RED SUPER SPICY koreai instant leves 120g",
+    "price": 380,
+    "pack_count": 1,
+    "unit_price": 380,
+    "url": "https://allegro.hu/termek/nongshim-shin-ramyun-red-super-spicy-koreai-instant-leves-120g-93e7b182-b504-4ad0-9638-2249f1a55ba1",
+    "checked_at": "2026-06-28 21:51 Europe/Budapest",
+    "status": "show"
+  },
+  {
+    "product": "Shin Ramyun",
+    "title": "elérhető változatok",
+    "price": 405,
+    "pack_count": 1,
+    "unit_price": 405,
+    "url": "https://allegro.hu/termek/nongshim-shin-ramyun-koreai-instant-leves-120g-ff26735d-4673-4573-b6f9-db0d90eea5ef",
+    "checked_at": "2026-06-28 21:51 Europe/Budapest",
+    "status": "show"
+  },
+  {
+    "product": "Shin Ramyun",
+    "title": "Nongshim Shin Ramyun Spicy Chicken koreai instant leves 120g",
+    "price": 420,
+    "pack_count": 1,
+    "unit_price": 420,
+    "url": "https://allegro.hu/termek/shin-ramyun-spicy-chicken-instant-leves-nongshim-120g-fuszeres-72f479cd-bcec-4769-b4e5-494e85d7e40d",
+    "checked_at": "2026-06-28 21:51 Europe/Budapest",
+    "status": "show"
+  },
+  {
+    "product": "Shin Ramyun",
+    "title": "Eredeti koreai Shin Ramyun leves, extra csípős 5 x 120g - Nongshim",
+    "price": 2380,
+    "pack_count": 5,
+    "unit_price": 476,
+    "url": "https://allegro.hu/termek/shin-ramyun-instant-teszta-nongshim-5x120g-koreai-csipos-leves-dba63bde-6933-43ef-9f9b-c579be313d8d",
+    "checked_at": "2026-06-28 21:51 Europe/Budapest",
+    "status": "show"
+  },
+  {
+    "product": "Shin Ramyun",
+    "title": "Shin Ramyun Noodle instant leves Nongshim 68 g",
+    "price": 495,
+    "pack_count": 1,
+    "unit_price": 495,
+    "url": "https://allegro.hu/termek/shin-cup-hot-spicy-koreai-leves-68g-nongshim-1814de59-be4b-4a97-be1e-a5336045bdec",
+    "checked_at": "2026-06-28 21:51 Europe/Budapest",
+    "status": "show"
+  }
+]
