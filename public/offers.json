@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "product": "Shin Ramyun",
+    "title": "elérhető változatok",
+    "price": 320,
+    "pack_count": 1,
+    "unit_price": 320,
+    "url": "https://allegro.hu/termek/nongshim-shin-ramyun-koreai-instant-leves-120g-ff26735d-4673-4573-b6f9-db0d90eea5ef",
+    "checked_at": "2026-07-22 16:31 Europe/Budapest",
+    "status": "show"
+  },
+  {
+    "product": "Shin Ramyun",
+    "title": "elérhető változatok",
+    "price": 9160,
+    "pack_count": 20,
+    "unit_price": 458,
+    "url": "https://allegro.hu/termek/instant-leves-nongshim-ramyun-csipos-20x120-g-898d23ba-0aab-4f8d-82c3-1b186aaa86a8",
+    "checked_at": "2026-07-22 16:31 Europe/Budapest",
+    "status": "show"
+  },
+  {
+    "product": "Shin Ramyun",
+    "title": "Koreai instant leves Nongshim Shin Ramyun Gourmet Spicy Chicken 120 g",
+    "price": 490,
+    "pack_count": 1,
+    "unit_price": 490,
+    "url": "https://allegro.hu/termek/shin-ramyun-spicy-chicken-instant-leves-nongshim-120g-fuszeres-72f479cd-bcec-4769-b4e5-494e85d7e40d",
+    "checked_at": "2026-07-22 16:31 Europe/Budapest",
+    "status": "show"
+  },
+  {
+    "product": "Shin Ramyun",
+    "title": "Shin Ramyun instant tészta Nongshim 5x120g koreai csípős leves",
+    "price": 2470,
+    "pack_count": 5,
+    "unit_price": 494,
+    "url": "https://allegro.hu/termek/shin-ramyun-instant-teszta-nongshim-5x120g-koreai-csipos-leves-dba63bde-6933-43ef-9f9b-c579be313d8d",
+    "checked_at": "2026-07-22 16:31 Europe/Budapest",
+    "status": "show"
+  }
+]
